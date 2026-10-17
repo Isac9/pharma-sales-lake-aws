@@ -1,0 +1,22 @@
+pharma_lake:
+  target: localstack
+  outputs:
+    # DuckDB reads and writes the S3 lake directly.
+    localstack:
+      type: duckdb
+      path: /tmp/pharma_lake.duckdb
+      extensions: [httpfs]
+      settings:
+        s3_endpoint: "{{ env_var('S3_ENDPOINT_HOST', 'localhost:4566') }}"
+        s3_url_style: path
+        s3_use_ssl: false
+        s3_access_key_id: test
+        s3_secret_access_key: test
+        s3_region: us-east-1
+    aws:
+      type: duckdb
+      path: /tmp/pharma_lake.duckdb
+      extensions: [httpfs, aws]
+      secrets:
+        - type: s3
+          provider: credential_chain

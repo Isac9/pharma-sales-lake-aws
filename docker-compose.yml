@@ -1,0 +1,35 @@
+name: pharma-lake
+
+services:
+  # A fake AWS on this computer: S3, Lambda, SQS, DynamoDB, IAM, CloudWatch Logs.
+  localstack:
+    image: localstack/localstack:3.8.1
+    ports:
+      - "4566:4566"
+    environment:
+      SERVICES: s3,lambda,sqs,dynamodb,iam,sts,logs
+      LAMBDA_DOCKER_NETWORK: pharma-lake_default
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  terraform:
+    image: hashicorp/terraform:1.9.8
+    profiles: [tools]
+    working_dir: /work/infra
+    volumes:
+      - ./:/work
+    environment:
+      TF_VAR_localstack_endpoint: http://localstack:4566
+
+  tools:
+    build: ./tools
+    profiles: [tools]
+    volumes:
+      - ./:/work
+    environment:
+      AWS_ENDPOINT_URL: http://localstack:4566
+      S3_ENDPOINT_HOST: localstack:4566
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+      DBT_PROFILES_DIR: /work/dbt

@@ -1,0 +1,12 @@
+data/
+infra/.terraform/
+infra/build/
+infra/*.tfstate*
+infra/.terraform.lock.hcl
+dbt/target/
+dbt/logs/
+dbt/.user.yml
+logs/
+__pycache__/
+.pytest_cache/
+.env

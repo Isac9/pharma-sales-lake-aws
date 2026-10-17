@@ -1,0 +1,39 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  end-to-end:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Terraform format and validation
+        run: |
+          docker compose run --rm terraform fmt -check -recursive
+          docker compose run --rm terraform init -input=false -backend=false
+          docker compose run --rm terraform validate
+
+      - name: Unit tests
+        run: docker compose run --rm tools pytest -q
+
+      - name: Start LocalStack
+        run: |
+          docker compose up -d localstack
+          timeout 120 bash -c 'until curl -s localhost:4566/_localstack/health | grep -q "\"s3\": \"available\""; do sleep 2; done'
+
+      - name: Deploy the infrastructure (Terraform)
+        run: docker compose run --rm terraform apply -auto-approve -input=false
+
+      - name: Wholesalers drop their files, the Lambda ingests them
+        run: |
+          docker compose run --rm tools python -m lake.generate
+          docker compose run --rm tools python -m lake.upload
+
+      - name: Gold layer and tests (dbt + DuckDB on S3)
+        run: docker compose run --rm tools dbt build --project-dir dbt
+
+      - name: Report
+        run: |
+          docker compose run --rm tools python -m lake.status
+          docker compose run --rm tools python -m lake.report

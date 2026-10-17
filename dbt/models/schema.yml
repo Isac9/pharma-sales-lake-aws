@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: fct_sales
+    description: One row per invoice line, all wholesalers, deduplicated across cumulative files.
+    columns:
+      - name: wholesaler
+        data_tests:
+          - accepted_values: {values: ['medipro', 'pharmalink', 'santeplus', 'distrimed']}
+      - name: product_code
+        description: Canonical product, from reference/product_aliases.csv.
+        data_tests: [not_null]
+      - name: locality_code
+        data_tests: [not_null]
+      - name: quantity
+        data_tests: [not_null]
+      - name: amount_xof
+        description: Line total in XOF (santeplus sends it; the others send a unit price).
+        data_tests: [not_null]
+
+  - name: sales_by_product_week
+    description: Quantities and revenue per ISO week, product and wholesaler.

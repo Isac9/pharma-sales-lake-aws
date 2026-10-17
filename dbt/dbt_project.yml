@@ -1,0 +1,15 @@
+name: pharma_lake
+version: "1.0.0"
+config-version: 2
+profile: pharma_lake
+
+model-paths: ["models"]
+test-paths: ["tests"]
+target-path: target
+
+vars:
+  lake_bucket: "{{ env_var('LAKE_BUCKET', 'pharma-lake-local') }}"
+
+models:
+  pharma_lake:
+    +materialized: view
